@@ -1,17 +1,3 @@
----
-layout: post
-title: 外围打点思路
-subtitle: 持续更新
-bigimg: /img/path.jpg
-tags: [Red-Team]
----
-
-**文章结构:**   
-
-![Peripheral_Penetration_Tools.png](https://raw.githubusercontent.com/Scotoma8/CyberSecurity/master/Peripheral_Penetration/Peripheral_Penetration_Tools.png)
-
-**文章内容:**   
-
 # 外围打点(工具)
 
 ## Virtual Host信息
