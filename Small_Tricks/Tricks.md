@@ -140,9 +140,9 @@ sekurlsa::logonpasswords
 
 ## Linux导入根证书
 
-### openssl x509 -inform der -in QiAnXin\ Enterprise\ Security\ SSL\ CA.cer -out QiAnXin\ Enterprise\ Security\ SSL\ CA.crt
+### openssl x509 -inform der -in x\ Enterprise\ Security\ SSL\ CA.cer -out x\ Enterprise\ Security\ SSL\ CA.crt
 mkdir /usr/share/ca-certificates/extra
-cp QiAnXin\ Enterprise\ Security\ SSL\ CA.crt /usr/share/ca-certificates/extra/QAX.crt
+cp x\ Enterprise\ Security\ SSL\ CA.crt /usr/share/ca-certificates/extra/QAX.crt
 
 dpkg-reconfigure ca-certificates
 或
@@ -154,7 +154,7 @@ reboot
 
 ## git下载问题
 
-### git config --global http.proxy http://x.x.x.x:3128
+### git config --global http.proxy http://x:3128
 git config --global http.sslVerify false
 
 ## git拉取更新仓库
@@ -966,4 +966,22 @@ foreach ($r in $hives) { gci "registry::${r}\" -rec -ea SilentlyContinue | % { i
 如果该值设置为0，则禁用缓存，并且Mimikatz将无效
 如果不存在或设置为1，则启用缓存，Mimikatz将能够从LSASS进程内存中检索凭证
 
-*XMind: ZEN - Trial Version*
+# 域名解析到x.github.io
+
+1.x.github.io仓库中添加CNAME文件并在文件中填写绑定的域名(domain.com)  
+2.x.github.io仓库设置中找到GitHub Pages Custom domain会自动同步  
+3.ping x.github.io获取ip信息:  
+
+> 185.199.108.153  
+> 185.199.109.153  
+> 185.199.110.153  
+> 185.199.111.153  
+
+4.修改域名解析记录:  
+
+> @	A	默认	185.199.110.153  
+
+5.x.github.io仓库设置中找到GitHub Pages 开启Enforce HTTPS  
+
+> HTTPS provides a layer of encryption that prevents others from snooping on or tampering with traffic to your site.  
+> When HTTPS is enforced, your site will only be served over HTTPS.  
