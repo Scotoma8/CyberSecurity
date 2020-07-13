@@ -154,7 +154,7 @@ reboot
 
 ## git下载问题
 
-### git config --global http.proxy http://proxy.lfk.360es.cn:3128
+### git config --global http.proxy http://x.x.x.x:3128
 git config --global http.sslVerify false
 
 ## git拉取更新仓库
