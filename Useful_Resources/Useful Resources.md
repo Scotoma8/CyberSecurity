@@ -278,6 +278,73 @@ hash = mmh3.hash(favicon)
 print hash
 搜索http.favicon.hash:哈希值
 
+### 搜索语法关键词列表
+
+- 附录B：搜索语法关键词列表
+常用语法
+过滤器名	描述	类型	举例
+after	只显示给出日期之后的结果(dd/mm/yyyy)	string	after:"04/02/2017"
+asn	自治系统号码	string	asn:"AS4130"
+before	只显示给出日期之前的结果(dd/mm/yyyy)	string	before:"04/02/2017"
+category	现有的分类：ics,malware	string	category:"malware"
+city	城市的名字	string	city:"San Diego"
+country	国家简写	string	country:"ES" country:"CN"
+geo	经纬度	string	geo:"46.9481,7.4474"
+hash	数据的hash值	int	-hash:0
+has_ipv6	是否是IPv6	boolean	has_ipv6:true
+has_screenshot	是否有截图	boolean	has_screenshot:true
+hostname	主机名或域名	string	hostname:"google"
+ip	ip地址	string	ip:"54.67.82.248 "
+isp	ISP供应商	string	isp:"China Telecom"
+org	组织或公司	string	org:"google"
+os	操作系统	string	os:"Windows 7 or 8"
+port	端口号	int	port:21
+postal	邮政编码(仅限于美国)	string	postal:"98221"
+product	软件、平台	string	product:"Apache httpd" product:"openssh"
+region	地区或国家别名	string	-
+state		string	-
+net	CIDR格式的IP地址	string	net:190.30.40.0/24
+version	软件版本	string	version:"2.6.1"
+vuln	漏洞的CVE ID	string	vuln:CVE-2014-0723
+HTTP过滤器
+名称	描述	类型
+http.component	网站上所使用的网络技术名称	string
+http.component_category	网站上使用的网络组件的类别	string
+http.html	Web banner	string
+http.html_hash	网站HTML的哈希值	int
+http.status	响应状态码	int
+http.title	网站title得banner	string
+NTP 过滤器
+名称	描述	类型
+ntp.ip	查找在其monlist中NTP服务器的IP	
+ntp.ip_count	初始monlist返回的IP数量	int
+ntp.more	真/假; monlist集是否有更多的IP地址	boolean
+ntp.port	monlist中的IP地址使用的端口	int
+SSL过滤器
+名称	描述	类型
+has_ssl	有无SSL	boolean
+SSL	搜索所有SSL的数据	string
+ssl.alpn	诸如HTTP/2的应用层协议	string
+ssl.chain_count	链中的证书数量	int
+ssl.version	可能的值：SSLv2，SSLv3，TLSv1，TLSv1.1，TLSv1.2	string
+ssl.cert.alg	证书算法	string
+ssl.cert.expired	是否是过期证书	boolean
+ssl.cert.extension	证书中的扩展名	string
+ssl.cert.serial	序列号为整数或十六进制字符串	int/string
+ssl.cert.pubkey.bits	公钥的位数	int
+ssl.cert.pubkey.type	公钥类型	string
+ssl.cipher.version	SSL版本的首选密码	string
+ssl.cipher.bits	首选密码中的位数	int
+ssl.cipher.name	首选密码的名称	string
+Telnet 过滤器
+名称	描述	类型
+telnet.option	搜索所有选项	string
+telnet.do	对方执行的请求或期望对方执行指示的选项	string
+telnet.dont	对方停止执行的请求或不再期望对方执行指定的选项	string
+telnet.will	确认现在正在执行指定的选项	string
+telnet.wont	表示拒绝执行或继续执行指定的选项	string
+
+
 ## APP download
 
 ### https://apkpure.com/
