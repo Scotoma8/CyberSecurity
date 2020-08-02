@@ -1820,5 +1820,3 @@ Swagshop
 Networked					
 23
 jarvis	
-
-*XMind: ZEN - Trial Version*

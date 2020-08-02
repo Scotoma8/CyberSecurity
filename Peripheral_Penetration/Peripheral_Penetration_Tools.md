@@ -723,6 +723,14 @@ https://datarecovery.com/rd/default passwords/
 
 ### https://www.opengps.cn/Data/IP/LocHighAcc.aspx
 
+### https://mxtoolbox.com/IPv6.aspx
+
+### https://www.ultratools.com/tools/ipv6Info
+
+### https://www.t00ls.net/ip.html
+
+### https://www.apnic.net/
+
 ### https://www.ip2location.com/
 
 ### https://www.maxmind.com/en/geoip-demo
@@ -996,6 +1004,10 @@ python3 cloudflair.py myvulnerable.site
 ### http://company.xizhi.com/
 
 ### https://www.creditchina.gov.cn/
+
+### 防骗数据库查询
+
+- http://www.fpsjk.com/
 
 ## 备案信息
 
@@ -1417,5 +1429,4 @@ nmap -sT -Pn -v --script dns-zone-transfer.nse,ftp-anon.nse,ftp-proftpd-backdoor
 
 利用nmap一句话进行目标C段弱口令爆破:
 nmap -sT -v -Pn --script ftp-brute.nse,imap-brute.nse,smtp-brute.nse,pop3-brute.nse,mongodb-brute.nse,redis-brute.nse,ms-sql-brute.nse,rlogin-brute.nse,rsync-brute.nse,mysql-brute.nse,pgsql-brute.nse,oracle-sid-brute.nse,oracle-brute.nse,rtsp-url-brute.nse,snmp-brute.nse,svn-brute.nse,telnet-brute.nse,vnc-brute.nse,xmpp-brute.nse 192.168.3.0/24
-
 
